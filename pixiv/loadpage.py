@@ -9,7 +9,6 @@ class LoadPage(Login):
     def __init__(self):
         super().__init__()
         self.pixiv = 'pixiv'
-        self.pixUrl = 'http://www.pixiv.net'
 
     def url_open(self, url, post_value=None):
         page = self.get_page_data(url, post_value)

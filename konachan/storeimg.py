@@ -1,40 +1,20 @@
 __author__ = 'akr'
 
-from os import makedirs, listdir
-from os.path import exists
 from re import compile, search, finditer
 
-from tool.getdata import GetData
+from pdlib.abstoreimg import AbStoreImg
+from konachan.gettagpage import GetTagPage
 
 
-class StoreImg(GetData):
+class StoreImg(GetTagPage, AbStoreImg):
     def __init__(self):
         super().__init__()
-        self.konachan = 'konachan'
         self.postShowUrl = 'http://konachan.com/post/show/'
-        self.tagPageUrl = 'http://konachan.com/post?page=%d&tags=%s'
-
-    def __get_tag_page(self):
-        self.tag = input('Please enter the tag name: ')
-        self.tagDirName = 'images/%s/%s' % (self.konachan, self.tag)
-        if not exists(self.tagDirName):
-            makedirs(self.tagDirName)
-        self.existedImg = ','.join(listdir(self.tagDirName))
-
-        page_num = 1
-        while True:
-            print('Load tag page %d...' % page_num)
-            tag_page = self.get_page_data(self.tagPageUrl % (page_num, self.tag))
-            if search('Nobody here but us chickens!', tag_page):
-                print('Nobody here but us chickens.')
-                break
-            yield tag_page
-            page_num += 1
 
     def __get_img_page_url(self):
         pattern = compile('<a.*?class="thumb".*?href="/post/show/(\d*)/')
 
-        for tag_page in self.__get_tag_page():
+        for tag_page in self._get_tag_page():
             for result in finditer(pattern, tag_page):
                 print('Get image id...')
                 self.img_id = result.group(1)
@@ -52,7 +32,7 @@ class StoreImg(GetData):
             img_page = self.get_page_data(img_page_url)
             yield img_page
 
-    def __get_original_img_url(self):
+    def __get_ori_img_url(self):
         pattern_best = compile('<a.*?class="original-file-unchanged".*?href="(.*?)".*?id="png"')
         pattern_better = compile('<a.*?class="original-file-unchanged".*?href="(.*?)".*?id="highres"')
         pattern_good = compile('<a.*?class="original-file-changed".*?href="(.*?)".*?id="highres"')
@@ -71,20 +51,12 @@ class StoreImg(GetData):
             else:
                 yield good_img_url.group(1)
 
-    def start(self):
+    def start_store_img(self):
         count = 1
-        for ori_img_url in self.__get_original_img_url():
+        for ori_img_url in self.__get_ori_img_url():
             img_name = '%s/%s.%s' % (self.tagDirName, self.img_id, ori_img_url.split('.')[-1])
-
-            print('Load the original image...')
-            img_data = self.get_img_data(ori_img_url)
-
-            print('Store %s...' % img_name)
-            f = open(img_name, 'wb')
-            f.write(img_data)
-            f.close()
-            print('Store success. (%d)' % count)
-
+            self.store_img(ori_img_url, img_name)
+            print('(%d)' % count)
             count += 1
         else:
             print('Task completion.')

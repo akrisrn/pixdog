@@ -6,7 +6,7 @@ from os.path import exists
 from http.cookiejar import MozillaCookieJar
 from urllib.request import HTTPCookieProcessor, build_opener, install_opener
 
-from tool.getdata import GetData
+from pdlib.getdata import GetData
 
 
 class Login(GetData):

@@ -15,22 +15,25 @@ class GetData(object):
                         'Accept-Encoding': 'gzip, deflate'
                         }
 
-    def get_img_data(self, url):
-        request = Request(url, headers=self.headers)
+    @staticmethod
+    def handle_response(request, time_out=30):
         try:
             try:
-                img_data = urlopen(request, timeout=90).read()
+                response = urlopen(request, timeout=time_out)
+                data = response.read()
             except URLError as e:
                 print(e.reason)
                 raise SystemExit(1)
             except timeout:
                 print('Load slowly.')
                 print('Reload...')
-                img_data = urlopen(request, timeout=90).read()
+                response = urlopen(request, timeout=time_out)
+                data = response.read()
             except IncompleteRead:
                 print('Load error.')
                 print('Reload...')
-                img_data = urlopen(request, timeout=90).read()
+                response = urlopen(request, timeout=time_out)
+                data = response.read()
         except URLError as e:
             print(e.reason)
             raise SystemExit(1)
@@ -42,7 +45,20 @@ class GetData(object):
             print('Load error.')
             print('Please wait a moment and check the network.')
             raise SystemExit(1)
+        return response, data
+
+    def get_img_data(self, url):
+        request = Request(url, headers=self.headers)
+        response, img_data = GetData.handle_response(request, 90)
         return img_data
+
+    def store_img(self, img_url, img_name):
+        print('Store %s...' % img_name)
+        img_data = self.get_img_data(img_url)
+        f = open(img_name, 'wb')
+        f.write(img_data)
+        f.close()
+        print('Store success.', end=' ')
 
     def get_page_data(self, url, post_value=None):
         if post_value is not None:
@@ -50,34 +66,9 @@ class GetData(object):
             request = Request(url, post_data, self.headers)
         else:
             request = Request(url, headers=self.headers)
-        try:
-            try:
-                response = urlopen(request, timeout=30)
-                page_data = response.read()
-            except URLError as e:
-                print(e.reason)
-                raise SystemExit(1)
-            except timeout:
-                print('Load slowly.')
-                print('Reload...')
-                response = urlopen(request, timeout=30)
-                page_data = response.read()
-            except IncompleteRead:
-                print('Load error.')
-                print('Reload...')
-                response = urlopen(request, timeout=30)
-                page_data = response.read()
-        except URLError as e:
-            print(e.reason)
-            raise SystemExit(1)
-        except timeout:
-            print('Load slowly.')
-            print('Please wait a moment and check the network.')
-            raise SystemExit(1)
-        except IncompleteRead:
-            print('Load error.')
-            print('Please wait a moment and check the network.')
-            raise SystemExit(1)
+
+        response, page_data = GetData.handle_response(request)
+
         if response.info().get('Content-Encoding') == 'gzip':
             f = GzipFile(fileobj=BytesIO(page_data))
             page_data = f.read().decode('utf-8')

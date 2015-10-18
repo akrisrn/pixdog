@@ -3,10 +3,11 @@ __author__ = 'akr'
 from re import compile, finditer, search
 from urllib.parse import urlencode
 
+from pdlib.abstoreimg import AbStoreImg
 from pixiv.switchpage import SwitchPage
 
 
-class StoreImg(SwitchPage):
+class StoreImg(SwitchPage, AbStoreImg):
     def __init__(self):
         super().__init__()
         self.login()
@@ -41,7 +42,7 @@ class StoreImg(SwitchPage):
             img_page = self.url_open(img_page_url)
             yield img_page
 
-    def __get_original_img_url(self):
+    def __get_ori_img_url(self):
         pattern = compile('data-src="(.*?)"\s*class="original-image">')
         pattern_meta2 = compile('class="meta"><li>.*?</li><li>(.*?)</li>')
 
@@ -81,22 +82,13 @@ class StoreImg(SwitchPage):
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
 
-    def start(self):
+    def start_store_img(self):
         count = 1
-        for ori_img_url in self.__get_original_img_url():
+        for ori_img_url in self.__get_ori_img_url():
             img_name = '%s/%s' % (self.dirName, ori_img_url.split('/')[-1])
-
             self.headers['Referer'] = self.refererUrl
-
-            print('Load the original image...')
-            img_data = self.get_img_data(ori_img_url)
-
-            print('Store %s...' % img_name)
-            f = open(img_name, 'wb')
-            f.write(img_data)
-            f.close()
-            print('Store success. (%d)' % count)
-
+            self.store_img(ori_img_url, img_name)
+            print('(%d)' % count)
             count += 1
         else:
             print('Task completion.')
