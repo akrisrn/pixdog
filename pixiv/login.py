@@ -14,7 +14,7 @@ class Login(GetData):
         super().__init__()
         self.userSetUrl = 'http://www.pixiv.net/setting_user.php'
         self.loginUrl = 'https://www.secure.pixiv.net/login.php'
-        self.cookiesFile = 'cookies.txt'
+        self.cookiesFile = 'pixiv-cookies.txt'
 
     def login(self):
         if exists(self.cookiesFile):
