@@ -1,6 +1,6 @@
 __author__ = 'akr'
 
-from os import mkdir
+from os import makedirs
 from os.path import exists
 from urllib.parse import urlencode
 
@@ -15,9 +15,9 @@ class GetRankPage(LoadPage):
     def _get_rank_work_page(self, mode):
         get_value = {'mode': mode}
 
-        self.rankDirName = '%s/%s' % (self.pixiv, mode)
+        self.rankDirName = 'images/%s/%s' % (self.pixiv, mode)
         if not exists(self.rankDirName):
-            mkdir(self.rankDirName)
+            makedirs(self.rankDirName)
 
         for i in range(1, 11):
             get_value['p'] = i

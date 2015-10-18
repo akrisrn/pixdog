@@ -1,6 +1,6 @@
 __author__ = 'akr'
 
-from os import mkdir, listdir
+from os import makedirs, listdir
 from os.path import exists
 from re import compile, search, finditer
 
@@ -15,12 +15,11 @@ class StoreImg(GetData):
         self.tagPageUrl = 'http://konachan.com/post?page=%d&tags=%s'
 
     def __get_tag_page(self):
-        self.tag = input('Please enter the tag name:')
-        self.tagDirName = '%s/%s' % (self.konachan, self.tag)
+        self.tag = input('Please enter the tag name: ')
+        self.tagDirName = 'images/%s/%s' % (self.konachan, self.tag)
         if not exists(self.tagDirName):
-            mkdir(self.tagDirName)
-        else:
-            self.existedImg = ','.join(listdir(self.tagDirName))
+            makedirs(self.tagDirName)
+        self.existedImg = ','.join(listdir(self.tagDirName))
 
         page_num = 1
         while True:
@@ -75,7 +74,7 @@ class StoreImg(GetData):
     def start(self):
         count = 1
         for ori_img_url in self.__get_original_img_url():
-            img_name = '%s/%s.%s' % (self.tag, self.img_id, ori_img_url.split('.')[-1])
+            img_name = '%s/%s.%s' % (self.tagDirName, self.img_id, ori_img_url.split('.')[-1])
 
             print('Load the original image...')
             img_data = self.get_img_data(ori_img_url)

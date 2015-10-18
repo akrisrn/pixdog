@@ -13,8 +13,8 @@ class SwitchPage(GetUserPage, GetRankPage):
 
     def _switch_work_page(self):
         print('Please choose a model:')
-        print('0.To get the image according to the user ID')
-        print('1.To get the image according to the rank')
+        print('0.To get image according to the user id')
+        print('1.To get image according to the rank')
         option = input('Input 0 or 1: ')
 
         if option == '0':
