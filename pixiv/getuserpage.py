@@ -2,7 +2,7 @@ __author__ = 'akr'
 
 from re import search, compile
 from os import makedirs
-from os.path import exists
+from os.path import exists, join
 from math import ceil
 from urllib.parse import urlencode
 
@@ -16,7 +16,7 @@ class GetUserPage(LoadPage):
 
     def _get_user_work_page(self):
         self.userId = input('Enter User id: ')
-        self.userDirName = 'images/%s/%s' % (self.pixiv, self.userId)
+        self.userDirName = join(self.imgStoreDirName, self.pixiv, self.userId)
 
         if self.userId.isdigit():
             if not exists(self.userDirName):

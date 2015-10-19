@@ -1,7 +1,7 @@
 __author__ = 'akr'
 
 from os import makedirs, listdir
-from os.path import exists
+from os.path import exists, join
 from re import search
 
 from pdlib.getdata import GetData
@@ -15,7 +15,7 @@ class GetTagPage(GetData):
 
     def _get_tag_page(self):
         self.tag = input('Please input the tag name: ')
-        self.tagDirName = 'images/%s/%s' % (self.konachan, self.tag)
+        self.tagDirName = join(self.imgStoreDirName, self.konachan, self.tag)
         if not exists(self.tagDirName):
             makedirs(self.tagDirName)
         self.existedImg = ','.join(listdir(self.tagDirName))

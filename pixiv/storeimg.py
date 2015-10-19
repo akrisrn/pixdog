@@ -1,5 +1,6 @@
 __author__ = 'akr'
 
+from os.path import join
 from re import compile, finditer, search
 from urllib.parse import urlencode
 
@@ -85,7 +86,7 @@ class StoreImg(SwitchPage, AbStoreImg):
     def start_store_img(self):
         count = 1
         for ori_img_url in self.__get_ori_img_url():
-            img_name = '%s/%s' % (self.dirName, ori_img_url.split('/')[-1])
+            img_name = join(self.dirName, ori_img_url.split('/')[-1])
             self.headers['Referer'] = self.refererUrl
             self.store_img(ori_img_url, img_name)
             print('(%d)' % count)

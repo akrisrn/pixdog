@@ -14,6 +14,7 @@ class GetData(object):
         self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0',
                         'Accept-Encoding': 'gzip, deflate'
                         }
+        self.imgStoreDirName = 'images'
 
     @staticmethod
     def handle_response(request, time_out=30):
@@ -55,9 +56,8 @@ class GetData(object):
     def store_img(self, img_url, img_name):
         print('Store %s...' % img_name)
         img_data = self.get_img_data(img_url)
-        f = open(img_name, 'wb')
-        f.write(img_data)
-        f.close()
+        with open(img_name, 'wb') as f:
+            f.write(img_data)
         print('Store success.', end=' ')
 
     def get_page_data(self, url, post_value=None):

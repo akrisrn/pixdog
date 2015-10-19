@@ -1,5 +1,6 @@
 __author__ = 'akr'
 
+from os.path import join
 from re import compile, search, finditer
 
 from pdlib.abstoreimg import AbStoreImg
@@ -54,7 +55,7 @@ class StoreImg(GetTagPage, AbStoreImg):
     def start_store_img(self):
         count = 1
         for ori_img_url in self.__get_ori_img_url():
-            img_name = '%s/%s.%s' % (self.tagDirName, self.img_id, ori_img_url.split('.')[-1])
+            img_name = join(self.tagDirName, (self.img_id + '.' + ori_img_url.split('.')[-1]))
             self.store_img(ori_img_url, img_name)
             print('(%d)' % count)
             count += 1
