@@ -17,7 +17,7 @@ class GetData(object):
         self.imgStoreDirName = 'images'
 
     @staticmethod
-    def handle_response(request, time_out=30):
+    def handle_request(request, time_out=30):
         try:
             try:
                 response = urlopen(request, timeout=time_out)
@@ -50,7 +50,7 @@ class GetData(object):
 
     def get_img_data(self, url):
         request = Request(url, headers=self.headers)
-        response, img_data = GetData.handle_response(request, 90)
+        response, img_data = GetData.handle_request(request, 90)
         return img_data
 
     def store_img(self, img_url, img_name):
@@ -67,7 +67,7 @@ class GetData(object):
         else:
             request = Request(url, headers=self.headers)
 
-        response, page_data = GetData.handle_response(request)
+        response, page_data = GetData.handle_request(request)
 
         if response.info().get('Content-Encoding') == 'gzip':
             f = GzipFile(fileobj=BytesIO(page_data))

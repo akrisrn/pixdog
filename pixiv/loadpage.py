@@ -13,17 +13,16 @@ class LoadPage(Login):
     def url_open(self, url, post_value=None):
         page = self.get_page_data(url, post_value)
 
-        if isinstance(page, str):
-            if (page.find('welcome') != -1) or (page.find('login-button') != -1):
-                print('This cookies has been invalid.')
-                print('Delete the old cookies.')
-                remove(self.cookiesFile)
+        if (page.find('welcome') != -1) or (page.find('login-button') != -1):
+            print('This cookies has been invalid.')
+            print('Delete the old cookies.')
+            remove(self.cookiesFile)
 
-                if hasattr(self, 'pixiv_id'):
-                    print('Automatic re ', end='')
-                    self._login(self.pixiv_id, self.password)
-                    page = self.get_page_data(url, post_value)
-                else:
-                    self._have_not_cookie_login()
-                    page = self.get_page_data(url, post_value)
+            if hasattr(self, 'pixiv_id'):
+                print('Automatic re ', end='')
+                self._login(self.pixiv_id, self.password)
+                page = self.get_page_data(url, post_value)
+            else:
+                self._have_not_cookie_login()
+                page = self.get_page_data(url, post_value)
         return page
