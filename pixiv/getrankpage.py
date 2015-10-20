@@ -13,7 +13,18 @@ class GetRankPage(LoadPage):
         self.rankUrl = 'http://www.pixiv.net/ranking.php?'
 
     def _get_rank_work_page(self, mode):
-        get_value = {'mode': mode}
+        if mode.find('ugoira') != -1:
+            mode_split = mode.split('_')
+            if len(mode_split) == 3:
+                get_value = {'mode': '_'.join(mode_split[1:3]),
+                             'content': mode_split[0]
+                             }
+            else:
+                get_value = {'mode': mode_split[1],
+                             'content': mode_split[0]
+                             }
+        else:
+            get_value = {'mode': mode}
 
         self.rankDirName = join(self.imgStoreDirName, self.pixiv, mode)
         if not exists(self.rankDirName):

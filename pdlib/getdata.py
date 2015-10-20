@@ -48,14 +48,14 @@ class GetData(object):
             raise SystemExit(1)
         return response, data
 
-    def get_img_data(self, url):
+    def get_img_data(self, url, time_out):
         request = Request(url, headers=self.headers)
-        response, img_data = GetData.handle_request(request, 90)
+        response, img_data = GetData.handle_request(request, time_out)
         return img_data
 
-    def store_img(self, img_url, img_name):
+    def store_img(self, img_url, img_name, time_out=90):
         print('Store %s...' % img_name)
-        img_data = self.get_img_data(img_url)
+        img_data = self.get_img_data(img_url, time_out)
         with open(img_name, 'wb') as f:
             f.write(img_data)
         print('Store success.', end=' ')

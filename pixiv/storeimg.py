@@ -1,9 +1,14 @@
 __author__ = 'akr'
 
-from os.path import join
+from shutil import rmtree
+from os import mkdir, remove
+from os.path import join, exists
 from re import compile, finditer, search
 from urllib.parse import urlencode
+from zipfile import ZipFile
+from PIL import Image
 
+from pdlib.images2gif import writeGif
 from pdlib.abstoreimg import AbStoreImg
 from pixiv.switchpage import SwitchPage
 
@@ -29,7 +34,7 @@ class StoreImg(SwitchPage, AbStoreImg):
                 img_page_url = self.memIllUrl + get_data
 
                 if self.img_class.find('multiple') == -1:
-                    if self.existedImg.find('%s_p0' % self.img_id) != -1:
+                    if self.existedImg.find(self.img_id) != -1:
                         print('Image has been saved.')
                         continue
                     print('Load image page...')
@@ -56,11 +61,13 @@ class StoreImg(SwitchPage, AbStoreImg):
                 yield ori_img_url.group(1)
             elif meta2.find('P') != -1:
                 img_num = meta2.split()[-1][:-1]
-                yield from self.__get_mul_original_img_url(self.img_id, img_num)
+                yield from self.__get_mul_ori_img_url(self.img_id, img_num)
             else:
-                print('Can not store dynamic images.')
+                print('Get the original dynamic image url...')
+                dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
+                yield dyn_ori_img_url
 
-    def __get_mul_original_img_url(self, img_id, img_num):
+    def __get_mul_ori_img_url(self, img_id, img_num):
         get_value = {'mode': 'manga_big',
                      'illust_id': img_id,
                      }
@@ -83,12 +90,44 @@ class StoreImg(SwitchPage, AbStoreImg):
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
 
+    def __get_gif_img(self, zip_name):
+        tmp_files = []
+        gif_name = zip_name.split('_ugoira')[0] + '.gif'
+
+        tmp_dir = join(self.dirName, 'tmp')
+        if not exists(tmp_dir):
+            mkdir(tmp_dir)
+
+        print('\nUnzip the file...')
+        zip_file = ZipFile(zip_name)
+
+        for file_name in zip_file.namelist():
+            tmp_file_name = join(tmp_dir, file_name)
+            zip_data = zip_file.read(file_name)
+            with open(tmp_file_name, 'wb') as f:
+                f.write(zip_data)
+            tmp_files.append(tmp_file_name)
+
+        print('Store %s...' % gif_name)
+        images = [Image.open(img_name) for img_name in tmp_files]
+        writeGif(gif_name, images, subRectangles=False)
+        print('Store success.', end=' ')
+
+        remove(zip_name)
+        rmtree(tmp_dir)
+
     def start_store_img(self):
         count = 1
         for ori_img_url in self.__get_ori_img_url():
             img_name = join(self.dirName, ori_img_url.split('/')[-1])
             self.headers['Referer'] = self.refererUrl
-            self.store_img(ori_img_url, img_name)
+
+            if img_name.endswith('zip'):
+                self.store_img(ori_img_url, img_name, 120)
+                self.__get_gif_img(img_name)
+            else:
+                self.store_img(ori_img_url, img_name)
+
             print('(%d)' % count)
             count += 1
         else:

@@ -23,11 +23,15 @@ class SwitchPage(GetUserPage, GetRankPage):
                 self.existedImg = ','.join(listdir(self.dirName))
                 yield work_page
         elif option == '1':
-            choose = input('Please choose daily/weekly/monthly/rookie/original/male/female/'
-                           'daily_r18/weekly_r18/male_r18/female_r18: ')
+            choose = input('Please choose daily/weekly/monthly/rookie/original/male/female/ugoira_daily/ugoira_weekly\n'
+                           'daily_r18/weekly_r18/male_r18/female_r18/ugoira_daily_r18/ugoira_weekly_r18: '
+                           )
 
             if choose not in ['daily', 'weekly', 'monthly', 'rookie', 'original', 'male', 'female',
-                              'daily_r18', 'weekly_r18', 'male_r18', 'female_r18']:
+                              'ugoira_daily', 'ugoira_weekly',
+                              'daily_r18', 'weekly_r18', 'male_r18', 'female_r18',
+                              'ugoira_daily_r18', 'ugoira_weekly_r18'
+                              ]:
                 print('Wrong input.')
                 raise SystemExit(1)
 
