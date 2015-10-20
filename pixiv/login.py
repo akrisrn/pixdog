@@ -41,7 +41,7 @@ class Login(GetData):
 
     def _have_not_cookie_login(self):
         select = input('Use the default account to login? (yes / no)\n')
-
+        select = select.lower()
         if select == 'yes':
             self._login()
         elif select == 'no':

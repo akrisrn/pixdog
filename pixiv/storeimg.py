@@ -16,6 +16,21 @@ class StoreImg(SwitchPage, AbStoreImg):
     def __init__(self):
         super().__init__()
         self.login()
+        select = input('Enable to get dynamic images? (yes / no)\n')
+        select = select.lower()
+        if select == 'yes':
+            try:
+                __import__('PIL')
+            except ImportError:
+                print('Please install pillow.')
+                print('- `pip install pillow`')
+                raise SystemExit(1)
+            self.enable_dy_img = True
+        elif select == 'no':
+            self.enable_dy_img = False
+        else:
+            print('Wrong input.')
+            raise SystemExit(1)
 
     def __get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
@@ -62,9 +77,12 @@ class StoreImg(SwitchPage, AbStoreImg):
                 img_num = meta2.split()[-1][:-1]
                 yield from self.__get_mul_ori_img_url(self.img_id, img_num)
             else:
-                print('Get the original dynamic image url...')
-                dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
-                yield dyn_ori_img_url
+                if self.enable_dy_img:
+                    print('Get the original dynamic image url...')
+                    dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
+                    yield dyn_ori_img_url
+                else:
+                    print('Can not get dynamic image.')
 
     def __get_mul_ori_img_url(self, img_id, img_num):
         get_value = {'mode': 'manga_big',
@@ -108,13 +126,6 @@ class StoreImg(SwitchPage, AbStoreImg):
             tmp_files.append(tmp_file_name)
 
         print('Store %s...' % gif_name)
-
-        try:
-            __import__('PIL')
-        except ImportError:
-            print('Please install pillow.')
-            print('- `pip install pillow`')
-            raise SystemExit(1)
 
         from PIL import Image
         images = [Image.open(img_name) for img_name in tmp_files]
