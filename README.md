@@ -3,9 +3,10 @@
 ## Require
 - python 3.x
 - pillow
+    - `pip3 install pillow`
 
 ## Usage
-`python start.py`
+`python3 start.py`
 
 ## Support
 - Pixiv

@@ -6,7 +6,6 @@ from os.path import join, exists
 from re import compile, finditer, search
 from urllib.parse import urlencode
 from zipfile import ZipFile
-from PIL import Image
 
 from pdlib.images2gif import writeGif
 from pdlib.abstoreimg import AbStoreImg
@@ -109,6 +108,15 @@ class StoreImg(SwitchPage, AbStoreImg):
             tmp_files.append(tmp_file_name)
 
         print('Store %s...' % gif_name)
+
+        try:
+            __import__('PIL')
+        except ImportError:
+            print('Please install pillow.')
+            print('- `pip install pillow`')
+            raise SystemExit(1)
+
+        from PIL import Image
         images = [Image.open(img_name) for img_name in tmp_files]
         writeGif(gif_name, images, subRectangles=False)
         print('Store success.', end=' ')
