@@ -117,14 +117,13 @@ class StoreImg(SwitchPage, AbStoreImg):
 
         print('\nUnzip the file...')
         zip_file = ZipFile(zip_name)
-
         for file_name in zip_file.namelist():
             tmp_file_name = join(tmp_dir, file_name)
             zip_data = zip_file.read(file_name)
             with open(tmp_file_name, 'wb') as f:
                 f.write(zip_data)
             tmp_files.append(tmp_file_name)
-
+        zip_file.close()
         print('Store %s...' % gif_name)
 
         from PIL import Image
