@@ -22,8 +22,8 @@ class StoreImg(SwitchPage, AbStoreImg):
             try:
                 __import__('PIL')
             except ImportError:
-                print('Please install pillow.')
-                print('- `pip install pillow`')
+                print('Please install pillow module first.')
+                print('`pip install pillow`')
                 raise SystemExit(1)
             self.enable_dy_img = True
         elif select == 'no':
@@ -48,10 +48,18 @@ class StoreImg(SwitchPage, AbStoreImg):
                 img_page_url = self.memIllUrl + get_data
 
                 if self.img_class.find('multiple') == -1:
-                    if self.existedImg.find(self.img_id) != -1:
+                    if self.existedName.find(self.img_id + '_ugoira1920x1080') != -1:
+                        print('Exist zip file.', end='')
+                        zip_name = self.img_id + '_ugoira1920x1080.zip'
+                        zip_name = join(self.dirName, zip_name)
+                        self.__get_gif_img(zip_name)
+                        print()
+                        continue
+                    elif self.existedName.find(self.img_id) != -1:
                         print('Image has been saved.')
                         continue
-                    print('Load image page...')
+                    else:
+                        print('Load image page...')
                 else:
                     print('Get multiple images...')
                 yield img_page_url
@@ -91,7 +99,7 @@ class StoreImg(SwitchPage, AbStoreImg):
         print('Total number of image: %s' % img_num)
 
         for i in range(int(img_num)):
-            if self.existedImg.find('%s_p%d' % (img_id, i)) != -1:
+            if self.existedName.find('%s_p%d' % (img_id, i)) != -1:
                 print('Image has been saved. (%d / %s)' % (i + 1, img_num))
                 continue
 
