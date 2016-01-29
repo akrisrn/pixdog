@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from os import listdir
 
 from pixiv.getuserpage import GetUserPage
@@ -16,7 +14,6 @@ class SwitchPage(GetUserPage, GetRankPage):
         print('0.To get image according to the user id')
         print('1.To get image according to the rank')
         option = input('Input 0 or 1: ')
-
         if option == '0':
             for work_page in self._get_user_work_page():
                 self.dirName = self.userDirName
@@ -26,7 +23,6 @@ class SwitchPage(GetUserPage, GetRankPage):
             choose = input('Please choose daily/weekly/monthly/rookie/original/male/female/ugoira_daily/ugoira_weekly/'
                            'daily_r18/weekly_r18/male_r18/female_r18/ugoira_daily_r18/ugoira_weekly_r18:\n'
                            )
-
             if choose not in ['daily', 'weekly', 'monthly', 'rookie', 'original', 'male', 'female',
                               'ugoira_daily', 'ugoira_weekly',
                               'daily_r18', 'weekly_r18', 'male_r18', 'female_r18',
@@ -34,7 +30,6 @@ class SwitchPage(GetUserPage, GetRankPage):
                               ]:
                 print('Wrong input.')
                 raise SystemExit(1)
-
             for work_page in self._get_rank_work_page(choose):
                 self.dirName = self.rankDirName
                 self.existedName = ','.join(listdir(self.dirName))

@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from os.path import join
 from re import compile, search, finditer
 
@@ -14,7 +12,6 @@ class StoreImg(GetTagPage, AbStoreImg):
 
     def __get_img_page_url(self):
         pattern = compile('<a.*?class="thumb".*?href="/post/show/(\d*)/')
-
         for tag_page in self._get_tag_page():
             for result in finditer(pattern, tag_page):
                 print('Get image id...')
@@ -37,14 +34,11 @@ class StoreImg(GetTagPage, AbStoreImg):
         pattern_best = compile('<a.*?class="original-file-unchanged".*?href="(.*?)".*?id="png"')
         pattern_better = compile('<a.*?class="original-file-unchanged".*?href="(.*?)".*?id="highres"')
         pattern_good = compile('<a.*?class="original-file-changed".*?href="(.*?)".*?id="highres"')
-
         for img_page in self.__get_img_page():
             print('Get the original image url...')
-
             best_img_url = search(pattern_best, img_page)
             better_img_url = search(pattern_better, img_page)
             good_img_url = search(pattern_good, img_page)
-
             if best_img_url:
                 yield best_img_url.group(1)
             elif better_img_url:
@@ -55,7 +49,7 @@ class StoreImg(GetTagPage, AbStoreImg):
     def start_store_img(self):
         count = 1
         for ori_img_url in self.__get_ori_img_url():
-            img_name = join(self.tagDirName, (self.img_id + '.' + ori_img_url.split('.')[-1]))
+            img_name = join(self.tagDirName, (self.img_id + '.' + str(ori_img_url.split('.')[-1])))
             self.store_img(ori_img_url, img_name)
             print('(%d)' % count)
             count += 1

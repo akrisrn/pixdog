@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from os import makedirs, listdir
 from os.path import exists, join
 from re import search
@@ -19,7 +17,6 @@ class GetTagPage(GetData):
         if not exists(self.tagDirName):
             makedirs(self.tagDirName)
         self.existedImg = ','.join(listdir(self.tagDirName))
-
         page_num = 1
         while True:
             print('Load tag page %d...' % page_num)

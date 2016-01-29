@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from shutil import rmtree
 from os import mkdir, remove
 from os.path import join, exists
@@ -34,13 +32,11 @@ class StoreImg(SwitchPage, AbStoreImg):
 
     def __get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
-
         for work_page in self._switch_work_page():
             for result in finditer(pattern, work_page):
                 print('Get image id...')
                 self.img_id = result.group(1)
                 self.img_class = result.group(2)
-
                 get_value = {'mode': 'medium',
                              'illust_id': self.img_id
                              }
@@ -73,11 +69,9 @@ class StoreImg(SwitchPage, AbStoreImg):
     def __get_ori_img_url(self):
         pattern = compile('data-src="(.*?)"\s*class="original-image">')
         pattern_meta2 = compile('class="meta"><li>.*?</li><li>(.*?)</li>')
-
         for img_page in self.__get_img_page():
             meta2 = search(pattern_meta2, img_page).group(1)
             ori_img_url = search(pattern, img_page)
-
             if ori_img_url:
                 print('Get the original image url...')
                 yield ori_img_url.group(1)
@@ -97,20 +91,16 @@ class StoreImg(SwitchPage, AbStoreImg):
                      'illust_id': img_id,
                      }
         print('Total number of image: %s' % img_num)
-
         for i in range(int(img_num)):
             if self.existedName.find('%s_p%d' % (img_id, i)) != -1:
                 print('Image has been saved. (%d / %s)' % (i + 1, img_num))
                 continue
-
             get_value['page'] = i
             get_data = urlencode(get_value)
             ori_img_page_url = self.memIllUrl + get_data
             self.refererUrl = ori_img_page_url
-
             print('Load the original image page...')
             ori_img_page = self.url_open(ori_img_page_url)
-
             print('Get the original image url...(%d / %s)' % (i + 1, img_num))
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
@@ -118,11 +108,9 @@ class StoreImg(SwitchPage, AbStoreImg):
     def __get_gif_img(self, zip_name):
         tmp_files = []
         gif_name = zip_name.split('_ugoira')[0] + '.gif'
-
         tmp_dir = join(self.dirName, 'tmp')
         if not exists(tmp_dir):
             mkdir(tmp_dir)
-
         print('\nUnzip the file...')
         zip_file = ZipFile(zip_name)
         for file_name in zip_file.namelist():
@@ -133,12 +121,10 @@ class StoreImg(SwitchPage, AbStoreImg):
             tmp_files.append(tmp_file_name)
         zip_file.close()
         print('Store %s...' % gif_name)
-
         from PIL import Image
         images = [Image.open(img_name) for img_name in tmp_files]
         writeGif(gif_name, images, subRectangles=False)
         print('Store success.', end=' ')
-
         remove(zip_name)
         rmtree(tmp_dir)
 
@@ -147,13 +133,11 @@ class StoreImg(SwitchPage, AbStoreImg):
         for ori_img_url in self.__get_ori_img_url():
             img_name = join(self.dirName, ori_img_url.split('/')[-1])
             self.headers['Referer'] = self.refererUrl
-
             if img_name.endswith('zip'):
                 self.store_img(ori_img_url, img_name, 120)
                 self.__get_gif_img(img_name)
             else:
                 self.store_img(ori_img_url, img_name)
-
             print('(%d)' % count)
             count += 1
         else:

@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 import pixiv.storeimg
 import konachan.storeimg
 

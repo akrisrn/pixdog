@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from re import search
 from os import remove
 from os.path import exists
@@ -28,7 +26,6 @@ class Login(GetData):
         cookie.load(self.cookiesFile, ignore_discard=True, ignore_expires=True)
         opener = build_opener(HTTPCookieProcessor(cookie))
         install_opener(opener)
-
         print('Test cookies...')
         page = self.get_page_data(self.userSetUrl)
         if not search('page-setting-user', page):
@@ -56,7 +53,6 @@ class Login(GetData):
         cookie = MozillaCookieJar(self.cookiesFile)
         opener = build_opener(HTTPCookieProcessor(cookie))
         install_opener(opener)
-
         print('Login...')
         post_value = {'mode': 'login',
                       'return_to': '/',
@@ -64,12 +60,10 @@ class Login(GetData):
                       'pass': password
                       }
         page = self.get_page_data(self.loginUrl, post_value)
-
         if search('error-guide', page):
             print('Login failed.')
             raise SystemExit(1)
         else:
             print('Login success.')
-
         print('Store cookies...')
         cookie.save(ignore_discard=True, ignore_expires=True)

@@ -1,5 +1,3 @@
-__author__ = 'akr'
-
 from io import BytesIO
 from gzip import GzipFile
 from socket import timeout
@@ -66,9 +64,7 @@ class GetData(object):
             request = Request(url, post_data, self.headers)
         else:
             request = Request(url, headers=self.headers)
-
         response, page_data = GetData.handle_request(request)
-
         if response.info().get('Content-Encoding') == 'gzip':
             f = GzipFile(fileobj=BytesIO(page_data))
             page_data = f.read().decode('utf-8')
