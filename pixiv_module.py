@@ -88,14 +88,16 @@ class Login(GetData):
         self.userSetUrl = 'http://www.pixiv.net/setting_user.php'
         self.loginUrl = 'https://www.secure.pixiv.net/login.php'
         self.cookiesFile = 'pixiv-cookies.txt'
+        self.pixiv_id = ''
+        self.password = ''
 
-    def login(self):
+    def check_cookies(self):
         if exists(self.cookiesFile):
-            self._have_cookie_login()
+            self.have_cookie_login()
         else:
-            self._have_not_cookie_login()
+            self.have_not_cookie_login()
 
-    def _have_cookie_login(self):
+    def have_cookie_login(self):
         print('Load cookies...')
         cookie = MozillaCookieJar()
         cookie.load(self.cookiesFile, ignore_discard=True, ignore_expires=True)
@@ -107,24 +109,24 @@ class Login(GetData):
             print('This cookies has been invalid.')
             print('Delete the old cookies.')
             remove(self.cookiesFile)
-            self._have_not_cookie_login()
+            self.have_not_cookie_login()
         else:
             print('Test success.')
 
-    def _have_not_cookie_login(self):
+    def have_not_cookie_login(self):
         select = input('Use the default account to login? (yes / no)\n')
         select = select.lower()
         if select == 'yes':
-            self._login()
+            self.login()
         elif select == 'no':
             self.pixiv_id = input('Input your account: ')
             self.password = input('Input your account password: ')
-            self._login(self.pixiv_id, self.password)
+            self.login(self.pixiv_id, self.password)
         else:
             print('Wrong input.')
             raise SystemExit(1)
 
-    def _login(self, pixiv_id='614634238', password='spider614634238'):
+    def login(self, pixiv_id='614634238', password='spider614634238'):
         cookie = MozillaCookieJar(self.cookiesFile)
         opener = build_opener(HTTPCookieProcessor(cookie))
         install_opener(opener)
@@ -157,10 +159,10 @@ class LoadPage(Login):
             remove(self.cookiesFile)
             if hasattr(self, 'pixiv_id'):
                 print('Automatic re ', end='')
-                self._login(self.pixiv_id, self.password)
+                self.login(self.pixiv_id, self.password)
                 page = self.get_page_data(url, post_value)
             else:
-                self._have_not_cookie_login()
+                self.have_not_cookie_login()
                 page = self.get_page_data(url, post_value)
         return page
 
@@ -169,8 +171,9 @@ class GetRankPage(LoadPage):
     def __init__(self):
         super().__init__()
         self.rankUrl = 'http://www.pixiv.net/ranking.php?'
+        self.rankDirName = ''
 
-    def _get_rank_work_page(self, mode):
+    def get_rank_work_page(self, mode):
         if mode.find('ugoira') != -1:
             mode_split = mode.split('_')
             if len(mode_split) == 3:
@@ -199,8 +202,10 @@ class GetUserPage(LoadPage):
     def __init__(self):
         super().__init__()
         self.memIllUrl = 'http://www.pixiv.net/member_illust.php?'
+        self.userId = ''
+        self.userDirName = ''
 
-    def _get_user_work_page(self):
+    def get_user_work_page(self):
         self.userId = input('Enter User id: ')
         self.userDirName = join(self.imgStoreDirName, self.pixiv, self.userId)
         if self.userId.isdigit():
@@ -236,14 +241,16 @@ class SwitchPage(GetUserPage, GetRankPage):
     def __init__(self):
         GetUserPage.__init__(self)
         GetRankPage.__init__(self)
+        self.dirName = ''
+        self.existedName = ''
 
-    def _switch_work_page(self):
+    def switch_work_page(self):
         print('Please choose a model:')
         print('0.To get image according to the user id')
         print('1.To get image according to the rank')
         option = input('Input 0 or 1: ')
         if option == '0':
-            for work_page in self._get_user_work_page():
+            for work_page in self.get_user_work_page():
                 self.dirName = self.userDirName
                 self.existedName = ','.join(listdir(self.dirName))
                 yield work_page
@@ -258,7 +265,7 @@ class SwitchPage(GetUserPage, GetRankPage):
                               ]:
                 print('Wrong input.')
                 raise SystemExit(1)
-            for work_page in self._get_rank_work_page(choose):
+            for work_page in self.get_rank_work_page(choose):
                 self.dirName = self.rankDirName
                 self.existedName = ','.join(listdir(self.dirName))
                 yield work_page
@@ -270,7 +277,7 @@ class SwitchPage(GetUserPage, GetRankPage):
 class StoreImg(SwitchPage):
     def __init__(self):
         super().__init__()
-        self.login()
+        self.check_cookies()
         select = input('Enable to get dynamic images? (yes / no)\n')
         select = select.lower()
         if select == 'yes':
@@ -286,10 +293,13 @@ class StoreImg(SwitchPage):
         else:
             print('Wrong input.')
             raise SystemExit(1)
+        self.img_id = ''
+        self.img_class = ''
+        self.refererUrl = ''
 
-    def __get_img_page_url(self):
+    def get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
-        for work_page in self._switch_work_page():
+        for work_page in self.switch_work_page():
             for result in finditer(pattern, work_page):
                 print('Get image id...')
                 self.img_id = result.group(1)
@@ -304,7 +314,7 @@ class StoreImg(SwitchPage):
                         print('Exist zip file.', end='')
                         zip_name = self.img_id + '_ugoira1920x1080.zip'
                         zip_name = join(self.dirName, zip_name)
-                        self.__get_gif_img(zip_name)
+                        self.get_gif_img(zip_name)
                         print()
                         continue
                     elif self.existedName.find(self.img_id) != -1:
@@ -316,16 +326,16 @@ class StoreImg(SwitchPage):
                     print('Get multiple images...')
                 yield img_page_url
 
-    def __get_img_page(self):
-        for img_page_url in self.__get_img_page_url():
+    def get_img_page(self):
+        for img_page_url in self.get_img_page_url():
             self.refererUrl = img_page_url
             img_page = self.url_open(img_page_url)
             yield img_page
 
-    def __get_ori_img_url(self):
+    def get_ori_img_url(self):
         pattern = compile('data-src="(.*?)"\s*class="original-image">')
         pattern_meta2 = compile('class="meta"><li>.*?</li><li>(.*?)</li>')
-        for img_page in self.__get_img_page():
+        for img_page in self.get_img_page():
             meta2 = search(pattern_meta2, img_page).group(1)
             ori_img_url = search(pattern, img_page)
             if ori_img_url:
@@ -333,7 +343,7 @@ class StoreImg(SwitchPage):
                 yield ori_img_url.group(1)
             elif meta2.find('P') != -1:
                 img_num = meta2.split()[-1][:-1]
-                yield from self.__get_mul_ori_img_url(self.img_id, img_num)
+                yield from self.get_mul_ori_img_url(self.img_id, img_num)
             else:
                 if self.enable_dy_img:
                     print('Get the original dynamic image url...')
@@ -342,7 +352,7 @@ class StoreImg(SwitchPage):
                 else:
                     print('Can not get dynamic image.')
 
-    def __get_mul_ori_img_url(self, img_id, img_num):
+    def get_mul_ori_img_url(self, img_id, img_num):
         get_value = {'mode': 'manga_big',
                      'illust_id': img_id,
                      }
@@ -361,7 +371,7 @@ class StoreImg(SwitchPage):
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
 
-    def __get_gif_img(self, zip_name):
+    def get_gif_img(self, zip_name):
         tmp_files = []
         gif_name = zip_name.split('_ugoira')[0] + '.gif'
         tmp_dir = join(self.dirName, 'tmp')
@@ -386,12 +396,12 @@ class StoreImg(SwitchPage):
 
     def start(self):
         count = 1
-        for ori_img_url in self.__get_ori_img_url():
+        for ori_img_url in self.get_ori_img_url():
             img_name = join(self.dirName, ori_img_url.split('/')[-1])
             self.headers['Referer'] = self.refererUrl
             if img_name.endswith('zip'):
                 self.store_img(ori_img_url, img_name, 120)
-                self.__get_gif_img(img_name)
+                self.get_gif_img(img_name)
             else:
                 self.store_img(ori_img_url, img_name)
             print('(%d)' % count)
