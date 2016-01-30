@@ -344,15 +344,15 @@ class StoreImg(SwitchPage):
                 if meta2.find('P') != -1:
                     img_num = meta2.split()[-1][:-1]
                     yield from self.get_mul_img_url(self.img_id, img_num)
-                elif img_page.find('original-works') != -1:
-                    yield from self.get_ori_img_url(self.img_id)
-                else:
+                elif img_page.find('ugoira') != -1:
                     if self.enable_dy_img:
                         print('Get the original dynamic image url...')
                         dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
                         yield dyn_ori_img_url
                     else:
                         print('Can not get dynamic image.')
+                else:
+                    yield from self.get_ori_img_url(self.img_id)
 
     def get_ori_img_url(self, img_id):
         get_value = {'mode': 'big',
