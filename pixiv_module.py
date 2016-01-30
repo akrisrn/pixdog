@@ -114,9 +114,9 @@ class Login(GetData):
             print('Test success.')
 
     def have_not_cookie_login(self):
-        select = input('Use the default account to login? (yes / no)\n')
+        select = input('Use the default account to login? (y / n)\n')
         select = select.lower()
-        if select == 'yes':
+        if select == 'y':
             self.login()
         elif select == 'no':
             self.pixiv_id = input('Input your account: ')
@@ -278,9 +278,9 @@ class StoreImg(SwitchPage):
     def __init__(self):
         super().__init__()
         self.check_cookies()
-        select = input('Enable to get dynamic images? (yes / no)\n')
+        select = input('Enable to get dynamic images? (y / n)\n')
         select = select.lower()
-        if select == 'yes':
+        if select == 'y':
             try:
                 __import__('PIL')
             except ImportError:
