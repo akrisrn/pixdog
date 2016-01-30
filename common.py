@@ -1,7 +1,7 @@
-from io import BytesIO
 from gzip import GzipFile
-from socket import timeout
 from http.client import IncompleteRead
+from io import BytesIO
+from socket import timeout
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -48,7 +48,7 @@ class GetData(object):
 
     def get_img_data(self, url, time_out):
         request = Request(url, headers=self.headers)
-        response, img_data = GetData.handle_request(request, time_out)
+        response, img_data = self.handle_request(request, time_out)
         return img_data
 
     def store_img(self, img_url, img_name, time_out=90):
@@ -64,7 +64,7 @@ class GetData(object):
             request = Request(url, post_data, self.headers)
         else:
             request = Request(url, headers=self.headers)
-        response, page_data = GetData.handle_request(request)
+        response, page_data = self.handle_request(request)
         if response.info().get('Content-Encoding') == 'gzip':
             f = GzipFile(fileobj=BytesIO(page_data))
             page_data = f.read().decode('utf-8')
