@@ -1,3 +1,4 @@
+from gc import collect
 from gzip import GzipFile
 from http.client import IncompleteRead
 from http.cookiejar import MozillaCookieJar
@@ -65,6 +66,7 @@ class GetData(object):
         img_data = self.get_img_data(img_url, time_out)
         with open(img_name, 'wb') as f:
             f.write(img_data)
+        del img_data
         print('Store success.', end=' ')
 
     def get_page_data(self, url, post_value=None):
@@ -403,6 +405,7 @@ class StoreImg(SwitchPage):
         from PIL import Image
         images = [Image.open(img_name) for img_name in tmp_files]
         writeGif(gif_name, images, subRectangles=False)
+        del images
         print('Store success.', end=' ')
         remove(zip_name)
         rmtree(tmp_dir)
@@ -418,5 +421,6 @@ class StoreImg(SwitchPage):
                 self.store_img(img_url, img_name)
             print('(%d)' % count)
             count += 1
+            collect()
         else:
             print('Task completion.')
