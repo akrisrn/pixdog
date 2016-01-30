@@ -295,7 +295,6 @@ class StoreImg(SwitchPage):
             raise SystemExit(1)
         self.img_id = ''
         self.img_class = ''
-        self.refererUrl = ''
 
     def get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
@@ -328,31 +327,45 @@ class StoreImg(SwitchPage):
 
     def get_img_page(self):
         for img_page_url in self.get_img_page_url():
-            self.refererUrl = img_page_url
             img_page = self.url_open(img_page_url)
+            self.headers['Referer'] = img_page_url
             yield img_page
 
-    def get_ori_img_url(self):
+    def get_img_url(self):
         pattern = compile('data-src="(.*?)"\s*class="original-image">')
         pattern_meta2 = compile('class="meta"><li>.*?</li><li>(.*?)</li>')
         for img_page in self.get_img_page():
-            meta2 = search(pattern_meta2, img_page).group(1)
             ori_img_url = search(pattern, img_page)
             if ori_img_url:
                 print('Get the original image url...')
                 yield ori_img_url.group(1)
-            elif meta2.find('P') != -1:
-                img_num = meta2.split()[-1][:-1]
-                yield from self.get_mul_ori_img_url(self.img_id, img_num)
             else:
-                if self.enable_dy_img:
-                    print('Get the original dynamic image url...')
-                    dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
-                    yield dyn_ori_img_url
+                meta2 = search(pattern_meta2, img_page).group(1)
+                if meta2.find('P') != -1:
+                    img_num = meta2.split()[-1][:-1]
+                    yield from self.get_mul_img_url(self.img_id, img_num)
+                elif img_page.find('original-works') != -1:
+                    yield from self.get_ori_img_url(self.img_id)
                 else:
-                    print('Can not get dynamic image.')
+                    if self.enable_dy_img:
+                        print('Get the original dynamic image url...')
+                        dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
+                        yield dyn_ori_img_url
+                    else:
+                        print('Can not get dynamic image.')
 
-    def get_mul_ori_img_url(self, img_id, img_num):
+    def get_ori_img_url(self, img_id):
+        get_value = {'mode': 'big',
+                     'illust_id': img_id,
+                     }
+        get_data = urlencode(get_value)
+        ori_img_page_url = self.memIllUrl + get_data
+        ori_img_page = self.url_open(ori_img_page_url)
+        self.headers['Referer'] = ori_img_page_url
+        ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
+        yield ori_img_url
+
+    def get_mul_img_url(self, img_id, img_num):
         get_value = {'mode': 'manga_big',
                      'illust_id': img_id,
                      }
@@ -364,9 +377,9 @@ class StoreImg(SwitchPage):
             get_value['page'] = i
             get_data = urlencode(get_value)
             ori_img_page_url = self.memIllUrl + get_data
-            self.refererUrl = ori_img_page_url
             print('Load the original image page...')
             ori_img_page = self.url_open(ori_img_page_url)
+            self.headers['Referer'] = ori_img_page_url
             print('Get the original image url...(%d / %s)' % (i + 1, img_num))
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
@@ -396,14 +409,13 @@ class StoreImg(SwitchPage):
 
     def start(self):
         count = 1
-        for ori_img_url in self.get_ori_img_url():
-            img_name = join(self.dirName, ori_img_url.split('/')[-1])
-            self.headers['Referer'] = self.refererUrl
+        for img_url in self.get_img_url():
+            img_name = join(self.dirName, img_url.split('/')[-1])
             if img_name.endswith('zip'):
-                self.store_img(ori_img_url, img_name, 120)
+                self.store_img(img_url, img_name, 120)
                 self.get_gif_img(img_name)
             else:
-                self.store_img(ori_img_url, img_name)
+                self.store_img(img_url, img_name)
             print('(%d)' % count)
             count += 1
         else:
