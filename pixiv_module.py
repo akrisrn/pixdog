@@ -120,7 +120,7 @@ class Login(GetData):
         select = select.lower()
         if select == 'y':
             self.login()
-        elif select == 'no':
+        elif select == 'n':
             self.pixiv_id = input('Input your account: ')
             self.password = input('Input your account password: ')
             self.login(self.pixiv_id, self.password)
@@ -290,7 +290,7 @@ class StoreImg(SwitchPage):
                 print('`pip install pillow`')
                 raise SystemExit(1)
             self.enable_dy_img = True
-        elif select == 'no':
+        elif select == 'n':
             self.enable_dy_img = False
         else:
             print('Wrong input.')
