@@ -88,7 +88,7 @@ class Login(GetData):
     def __init__(self):
         super().__init__()
         self.userSetUrl = 'http://www.pixiv.net/setting_user.php'
-        self.loginUrl = 'https://www.secure.pixiv.net/login.php'
+        self.loginUrl = 'https://accounts.pixiv.net/login'
         self.cookiesFile = 'pixiv-cookies.txt'
         self.pixiv_id = ''
         self.password = ''
@@ -120,7 +120,7 @@ class Login(GetData):
         select = select.lower()
         if select == 'y':
             self.login()
-        elif select == 'no':
+        elif select == 'n':
             self.pixiv_id = input('Input your account: ')
             self.password = input('Input your account password: ')
             self.login(self.pixiv_id, self.password)
@@ -133,13 +133,20 @@ class Login(GetData):
         opener = build_opener(HTTPCookieProcessor(cookie))
         install_opener(opener)
         print('Login...')
-        post_value = {'mode': 'login',
-                      'return_to': '/',
-                      'pixiv_id': pixiv_id,
-                      'pass': password
-                      }
+
+        page = self.get_page_data(self.loginUrl)
+        pattern = compile('name="post_key"\s*value="(.*?)"')
+        post_key = search(pattern, page).group(1)
+
+        post_value = {
+            'pixiv_id': pixiv_id,
+            'password': password,
+            'g_recaptcha_response': '',
+            'post_key': post_key,
+            'source': 'pc'
+        }
         page = self.get_page_data(self.loginUrl, post_value)
-        if search('error-guide', page):
+        if search('error-msg-list', page):
             print('Login failed.')
             raise SystemExit(1)
         else:
@@ -155,7 +162,7 @@ class LoadPage(Login):
 
     def url_open(self, url, post_value=None):
         page = self.get_page_data(url, post_value)
-        if (page.find('welcome') != -1) or (page.find('login-button') != -1):
+        if page.find('ui-button _login') != -1:
             print('This cookies has been invalid.')
             print('Delete the old cookies.')
             remove(self.cookiesFile)
@@ -290,7 +297,7 @@ class StoreImg(SwitchPage):
                 print('`pip install pillow`')
                 raise SystemExit(1)
             self.enable_dy_img = True
-        elif select == 'no':
+        elif select == 'n':
             self.enable_dy_img = False
         else:
             print('Wrong input.')
