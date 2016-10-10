@@ -1,8 +1,6 @@
 import pixiv_module
 
 try:
-    pixiv_module.StoreImg().start()
-except KeyboardInterrupt:
-    print('Abort.')
-except EOFError:
+    pixiv_module.start()
+except (KeyboardInterrupt, EOFError):
     print('Abort.')

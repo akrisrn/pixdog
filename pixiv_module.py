@@ -1,4 +1,3 @@
-from gc import collect
 from gzip import GzipFile
 from http.client import IncompleteRead
 from http.cookiejar import MozillaCookieJar
@@ -26,35 +25,17 @@ class GetData(object):
 
     @staticmethod
     def handle_request(request, time_out=30):
-        try:
+        while True:
             try:
                 response = urlopen(request, timeout=time_out)
                 data = response.read()
+                return response, data
             except URLError as e:
                 print(e.reason)
                 raise SystemExit(1)
-            except timeout:
-                print('Load slowly.')
-                print('Reload...')
-                response = urlopen(request, timeout=time_out)
-                data = response.read()
-            except IncompleteRead:
+            except (timeout, IncompleteRead):
                 print('Load error.')
                 print('Reload...')
-                response = urlopen(request, timeout=time_out)
-                data = response.read()
-        except URLError as e:
-            print(e.reason)
-            raise SystemExit(1)
-        except timeout:
-            print('Load slowly.')
-            print('Please wait a moment and check the network.')
-            raise SystemExit(1)
-        except IncompleteRead:
-            print('Load error.')
-            print('Please wait a moment and check the network.')
-            raise SystemExit(1)
-        return response, data
 
     def get_img_data(self, url, time_out):
         request = Request(url, headers=self.headers)
@@ -417,17 +398,17 @@ class StoreImg(SwitchPage):
         remove(zip_name)
         rmtree(tmp_dir)
 
-    def start(self):
-        count = 1
-        for img_url in self.get_img_url():
-            img_name = join(self.dirName, img_url.split('/')[-1])
-            if img_name.endswith('zip'):
-                self.store_img(img_url, img_name, 120)
-                self.get_gif_img(img_name)
-            else:
-                self.store_img(img_url, img_name)
-            print('(%d)' % count)
-            count += 1
-            collect()
+
+def start():
+    count = 1
+    si = StoreImg()
+    for img_url in si.get_img_url():
+        img_name = join(si.dirName, img_url.split('/')[-1])
+        if img_name.endswith('zip'):
+            si.store_img(img_url, img_name, 120)
+            si.get_gif_img(img_name)
         else:
-            print('Task completion.')
+            si.store_img(img_url, img_name)
+        print('(%d)' % count)
+        count += 1
+    print('Task completion.')
