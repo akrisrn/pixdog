@@ -7,6 +7,10 @@
 ## Usage
 `python3 start.py`
 
+## Build exe on Windows
+- `pip3 install pyinstaller`
+- `python3 build_exe.py`
+
 ## Support
 - Pixiv
     - 获取指定画师ID的所有图片
