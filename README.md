@@ -2,12 +2,12 @@
 
 ## Require
 - python 3.x
-- pip3 install -r requirements.txt
+- `pip3 install -r requirements.txt`
     - Pillow
     - PySocks
 
 ## Usage
-`python3 start.py`
+- `python3 start.py`
 
 ## Build exe on Windows
 - `pip3 install pyinstaller`
