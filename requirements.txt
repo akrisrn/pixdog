@@ -1,4 +1,2 @@
-numpy==1.11.2rc1
-Pillow==3.4.1
-scipy==0.18.1
+Pillow==3.3.1
 PySocks==1.5.7
