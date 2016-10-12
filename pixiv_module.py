@@ -1,3 +1,4 @@
+from threading import Thread
 from gzip import GzipFile
 from http.client import IncompleteRead
 from http.cookiejar import MozillaCookieJar
@@ -48,7 +49,7 @@ class GetData(object):
         with open(img_name, 'wb') as f:
             f.write(img_data)
         del img_data
-        print('Store success.', end=' ')
+        print('Store %s success.' % img_name, end=' ')
 
     def get_page_data(self, url, post_value=None):
         if post_value is not None:
@@ -399,16 +400,29 @@ class StoreImg(SwitchPage):
         rmtree(tmp_dir)
 
 
+count = 1
+
+
+def th(si, img_url):
+    global count
+    img_name = join(si.dirName, img_url.split('/')[-1])
+    if img_name.endswith('zip'):
+        si.store_img(img_url, img_name, 120)
+        si.get_gif_img(img_name)
+    else:
+        si.store_img(img_url, img_name)
+    print('(%d)' % count)
+    count += 1
+
+
 def start():
-    count = 1
     si = StoreImg()
+    thread = []
     for img_url in si.get_img_url():
-        img_name = join(si.dirName, img_url.split('/')[-1])
-        if img_name.endswith('zip'):
-            si.store_img(img_url, img_name, 120)
-            si.get_gif_img(img_name)
-        else:
-            si.store_img(img_url, img_name)
-        print('(%d)' % count)
-        count += 1
+        t = Thread(target=th, args=(si, img_url))
+        thread.append(t)
+        t.setDaemon(True)
+        t.start()
+    for t in thread:
+        t.join()
     print('Task completion.')

@@ -1,3 +1,4 @@
+from threading import Thread
 from math import ceil
 from socks import SOCKS5
 from socket import timeout
@@ -39,6 +40,31 @@ def get_img_mark(page_data, page_num, manga_page_url, use_proxy):
             yield img_mark
 
 
+count = 1
+
+
+def th(img_mark, path, img_count, img_page_url, use_proxy):
+    global count
+    print("Load image page...")
+    page_data = url_open(img_page_url + img_mark, use_proxy).decode('utf-8')
+    pattern = compile('<img id="img" src="(.*?)"')
+    img_url = search(pattern, page_data).group(1)
+    img_name = str(img_url.split('/')[-1])
+    exist_img = ','.join(listdir(path))
+    if exist_img.find(img_name) != -1:
+        print('Image has been saved.', end="")
+    else:
+        img_path = join(path, img_name)
+        print('Store %s...' % img_path)
+        img_data = url_open(img_url, use_proxy)
+        with open(img_path, 'wb') as f:
+            f.write(img_data)
+        del img_data
+        print('Store %s success.' % img_path, end=' ')
+    print("(%d/%d)" % (count, img_count))
+    count += 1
+
+
 def start():
     use_proxy = False
     proxy = input("Use proxy(sock5, port=1080)?[Y/n]: ")
@@ -75,24 +101,12 @@ def start():
     img_count = int(result[1])
     page_num = ceil(img_count / int(result[0]))
 
-    count = 1
+    thread = []
     for img_mark in get_img_mark(page_data, page_num, manga_page_url, use_proxy):
-        print("Load image page...")
-        page_data = url_open(img_page_url + img_mark, use_proxy).decode('utf-8')
-        pattern = compile('<img id="img" src="(.*?)"')
-        img_url = search(pattern, page_data).group(1)
-        img_name = str(img_url.split('/')[-1])
-        exist_img = ','.join(listdir(path))
-        if exist_img.find(img_name) != -1:
-            print('Image has been saved.', end="")
-        else:
-            img_path = join(path, img_name)
-            print('Store %s...' % img_path)
-            img_data = url_open(img_url, use_proxy)
-            with open(img_path, 'wb') as f:
-                f.write(img_data)
-            del img_data
-            print('Store success.', end=' ')
-        print("(%d/%d)" % (count, img_count))
-        count += 1
+        t = Thread(target=th, args=(img_mark, path, img_count, img_page_url, use_proxy))
+        thread.append(t)
+        t.setDaemon(True)
+        t.start()
+    for t in thread:
+        t.join()
     print('Task completion.')
