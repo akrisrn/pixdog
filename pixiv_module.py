@@ -378,9 +378,9 @@ class StoreImg(SwitchPage):
     def get_gif_img(self, zip_name):
         tmp_files = []
         gif_name = zip_name.split('_ugoira')[0] + '.gif'
-        tmp_dir = join(self.dirName, 'tmp')
+        tmp_dir = join(self.dirName, 'tmp', gif_name.split('\\')[-1])
         if not exists(tmp_dir):
-            mkdir(tmp_dir)
+            makedirs(tmp_dir)
         print('\nUnzip the file...')
         zip_file = ZipFile(zip_name)
         for file_name in zip_file.namelist():
@@ -395,7 +395,7 @@ class StoreImg(SwitchPage):
         images = [Image.open(img_name) for img_name in tmp_files]
         writeGif(gif_name, images, subRectangles=False)
         del images
-        print('Store success.', end=' ')
+        print('Store %s success.' % gif_name, end=' ')
         remove(zip_name)
         rmtree(tmp_dir)
 
