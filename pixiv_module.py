@@ -1,5 +1,5 @@
 from gzip import GzipFile
-from http.client import IncompleteRead
+from http.client import IncompleteRead, RemoteDisconnected
 from http.cookiejar import MozillaCookieJar
 from io import BytesIO
 from math import ceil
@@ -14,6 +14,9 @@ from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, build_opener, install_opener, Request, urlopen
 from zipfile import ZipFile
+
+from socks import SOCKS5
+from sockshandler import SocksiPyHandler
 
 from images2gif import writeGif
 
@@ -35,9 +38,17 @@ class GetData(object):
             except URLError as e:
                 print(e.reason)
                 raise SystemExit(1)
-            except (timeout, IncompleteRead):
+            except (timeout, IncompleteRead, RemoteDisconnected):
                 print('Load error.')
                 print('Reload...')
+
+    @staticmethod
+    def build_opener(cookie, use_proxy):
+        if use_proxy:
+            opener = build_opener(HTTPCookieProcessor(cookie), SocksiPyHandler(SOCKS5, "127.0.0.1", 1080))
+        else:
+            opener = build_opener(HTTPCookieProcessor(cookie))
+        install_opener(opener)
 
     def get_img_data(self, url, time_out):
         request = Request(url, headers=self.headers)
@@ -75,6 +86,7 @@ class Login(GetData):
         self.cookiesFile = 'pixiv-cookies.txt'
         self.pixiv_id = ''
         self.password = ''
+        self.use_proxy = False
 
     def check_cookies(self):
         if exists(self.cookiesFile):
@@ -86,8 +98,7 @@ class Login(GetData):
         print('Load cookies...')
         cookie = MozillaCookieJar()
         cookie.load(self.cookiesFile, ignore_discard=True, ignore_expires=True)
-        opener = build_opener(HTTPCookieProcessor(cookie))
-        install_opener(opener)
+        self.build_opener(cookie, self.use_proxy)
         print('Test cookies...')
         page = self.get_page_data(self.userSetUrl)
         if not search('page-setting-user', page):
@@ -113,8 +124,7 @@ class Login(GetData):
 
     def login(self, pixiv_id='614634238', password='spider614634238'):
         cookie = MozillaCookieJar(self.cookiesFile)
-        opener = build_opener(HTTPCookieProcessor(cookie))
-        install_opener(opener)
+        self.build_opener(cookie, self.use_proxy)
         print('Login...')
 
         page = self.get_page_data(self.loginUrl)
@@ -269,10 +279,14 @@ class SwitchPage(GetUserPage, GetRankPage):
 class StoreImg(SwitchPage):
     def __init__(self):
         super().__init__()
+        self.enable_dy_img = False
+        self.img_id = ''
+        self.img_class = ''
+
+    def init(self):
         self.check_cookies()
         select = input('Enable to get dynamic images? (y / n)\n')
-        select = select.lower()
-        if select == 'y':
+        if select.lower() == 'y':
             try:
                 __import__('PIL')
             except ImportError:
@@ -280,13 +294,9 @@ class StoreImg(SwitchPage):
                 print('`pip install pillow`')
                 raise SystemExit(1)
             self.enable_dy_img = True
-        elif select == 'n':
-            self.enable_dy_img = False
         else:
             print('Wrong input.')
             raise SystemExit(1)
-        self.img_id = ''
-        self.img_class = ''
 
     def get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
@@ -418,6 +428,10 @@ def th(si, img_url):
 
 def start():
     si = StoreImg()
+    proxy = input("Use proxy(sock5, port=1080)?[Y/n]: ")
+    if proxy.lower() == "y":
+        si.use_proxy = True
+    si.init()
     max_thread = 10
     thread = []
     for img_url in si.get_img_url():
