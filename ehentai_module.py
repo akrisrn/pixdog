@@ -1,14 +1,16 @@
-from threading import Thread
+from http.client import IncompleteRead, RemoteDisconnected
 from math import ceil
-from socks import SOCKS5
-from socket import timeout
 from os import listdir, makedirs
 from os.path import join, exists
-from urllib.error import URLError
 from re import compile, findall, search
+from socket import timeout
+from threading import Thread
+from time import sleep
+from urllib.error import URLError
 from urllib.request import build_opener, urlopen
+
+from socks import SOCKS5
 from sockshandler import SocksiPyHandler
-from http.client import IncompleteRead, RemoteDisconnected
 
 opener = build_opener(SocksiPyHandler(SOCKS5, "127.0.0.1", 1080))
 
@@ -101,12 +103,19 @@ def start():
     img_count = int(result[1])
     page_num = ceil(img_count / int(result[0]))
 
+    max_thread = 10
     thread = []
     for img_mark in get_img_mark(page_data, page_num, manga_page_url, use_proxy):
-        t = Thread(target=th, args=(img_mark, path, img_count, img_page_url, use_proxy))
-        thread.append(t)
-        t.setDaemon(True)
-        t.start()
+        while True:
+            thread = [t for t in thread if t.is_alive()]
+            if len(thread) < max_thread:
+                t = Thread(target=th, args=(img_mark, path, img_count, img_page_url, use_proxy))
+                thread.append(t)
+                t.setDaemon(True)
+                t.start()
+                break
+            else:
+                sleep(1)
     for t in thread:
         t.join()
     print('Task completion.')

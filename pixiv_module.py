@@ -1,14 +1,15 @@
-from threading import Thread
 from gzip import GzipFile
 from http.client import IncompleteRead
 from http.cookiejar import MozillaCookieJar
 from io import BytesIO
 from math import ceil
-from os import listdir, makedirs, mkdir, remove
+from os import listdir, makedirs, remove
 from os.path import join, exists
 from re import compile, finditer, search
 from shutil import rmtree
 from socket import timeout
+from threading import Thread
+from time import sleep
 from urllib.error import URLError
 from urllib.parse import urlencode
 from urllib.request import HTTPCookieProcessor, build_opener, install_opener, Request, urlopen
@@ -417,12 +418,19 @@ def th(si, img_url):
 
 def start():
     si = StoreImg()
+    max_thread = 10
     thread = []
     for img_url in si.get_img_url():
-        t = Thread(target=th, args=(si, img_url))
-        thread.append(t)
-        t.setDaemon(True)
-        t.start()
+        while True:
+            thread = [t for t in thread if t.is_alive()]
+            if len(thread) < max_thread:
+                t = Thread(target=th, args=(si, img_url))
+                thread.append(t)
+                t.setDaemon(True)
+                t.start()
+                break
+            else:
+                sleep(1)
     for t in thread:
         t.join()
     print('Task completion.')
