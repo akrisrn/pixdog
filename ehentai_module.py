@@ -1,7 +1,7 @@
 from http.client import IncompleteRead, RemoteDisconnected
 from math import ceil
 from os import listdir, makedirs
-from os.path import join, exists
+from os.path import join, exists, split
 from re import compile, findall, search
 from socket import timeout
 from threading import Thread
@@ -26,7 +26,6 @@ def url_open(url, use_proxy, t=60):
             print(e.reason)
             raise SystemExit(1)
         except (timeout, IncompleteRead, RemoteDisconnected):
-            print('Load error.')
             print('Reload...')
 
 
@@ -36,7 +35,7 @@ def get_img_mark(page_data, page_num, manga_page_url, use_proxy):
         yield img_mark
 
     for i in range(1, page_num):
-        print("Load the page %d..." % page_num)
+        print("Load the page %d..." % (i + 1))
         page_data = url_open(manga_page_url + "?p=" + str(i), use_proxy).decode('utf-8')
         for img_mark in findall(pattern, page_data):
             yield img_mark
@@ -47,29 +46,27 @@ count = 1
 
 def th(img_mark, path, img_count, img_page_url, use_proxy):
     global count
-    print("Load image page...")
     page_data = url_open(img_page_url + img_mark, use_proxy).decode('utf-8')
     pattern = compile('<img id="img" src="(.*?)"')
     img_url = search(pattern, page_data).group(1)
     img_name = str(img_url.split('/')[-1])
     exist_img = ','.join(listdir(path))
     if exist_img.find(img_name) != -1:
-        print('Image has been saved.', end="")
+        print('Image has been saved.', end=" ")
     else:
         img_path = join(path, img_name)
-        print('Store %s...' % img_path)
         img_data = url_open(img_url, use_proxy)
         with open(img_path, 'wb') as f:
             f.write(img_data)
         del img_data
-        print('Store %s success.' % img_path, end=' ')
+        print('%s is saved in %s.' % split(img_path)[::-1], end=' ')
     print("(%d/%d)" % (count, img_count))
     count += 1
 
 
 def start():
     use_proxy = False
-    proxy = input("Use proxy(sock5, port=1080)?[Y/n]: ")
+    proxy = input("Use proxy(sock5, port=1080)? [Y/N]: ")
     if proxy.lower() == "y":
         use_proxy = True
 

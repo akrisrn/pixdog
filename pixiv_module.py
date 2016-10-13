@@ -4,7 +4,7 @@ from http.cookiejar import MozillaCookieJar
 from io import BytesIO
 from math import ceil
 from os import listdir, makedirs, remove
-from os.path import join, exists
+from os.path import join, exists, split
 from re import compile, finditer, search
 from shutil import rmtree
 from socket import timeout
@@ -39,13 +39,12 @@ class GetData(object):
                 print(e.reason)
                 raise SystemExit(1)
             except (timeout, IncompleteRead, RemoteDisconnected):
-                print('Load error.')
                 print('Reload...')
 
     @staticmethod
     def build_opener(cookie, use_proxy):
         if use_proxy:
-            opener = build_opener(HTTPCookieProcessor(cookie), SocksiPyHandler(SOCKS5, "127.0.0.1", 1080))
+            opener = build_opener(HTTPCookieProcessor(cookie), SocksiPyHandler(SOCKS5, '127.0.0.1', 1080))
         else:
             opener = build_opener(HTTPCookieProcessor(cookie))
         install_opener(opener)
@@ -56,12 +55,13 @@ class GetData(object):
         return img_data
 
     def store_img(self, img_url, img_name, time_out=90):
-        print('Store %s...' % img_name)
+        path, name = split(img_name)
         img_data = self.get_img_data(img_url, time_out)
         with open(img_name, 'wb') as f:
             f.write(img_data)
         del img_data
-        print('Store %s success.' % img_name, end=' ')
+        if name.find('zip') == -1:
+            print('%s is saved in %s.' % (name, path), end=' ')
 
     def get_page_data(self, url, post_value=None):
         if post_value is not None:
@@ -95,28 +95,24 @@ class Login(GetData):
             self.have_not_cookie_login()
 
     def have_cookie_login(self):
-        print('Load cookies...')
+        print('Test cookies...')
         cookie = MozillaCookieJar()
         cookie.load(self.cookiesFile, ignore_discard=True, ignore_expires=True)
         self.build_opener(cookie, self.use_proxy)
-        print('Test cookies...')
         page = self.get_page_data(self.userSetUrl)
         if not search('page-setting-user', page):
             print('This cookies has been invalid.')
-            print('Delete the old cookies.')
             remove(self.cookiesFile)
             self.have_not_cookie_login()
-        else:
-            print('Test success.')
 
     def have_not_cookie_login(self):
-        select = input('Use the default account to login? (y / n)\n')
+        select = input('Use the default account to login? [Y/N]: ')
         select = select.lower()
         if select == 'y':
             self.login()
         elif select == 'n':
             self.pixiv_id = input('Input your account: ')
-            self.password = input('Input your account password: ')
+            self.password = input('Input your password: ')
             self.login(self.pixiv_id, self.password)
         else:
             print('Wrong input.')
@@ -142,9 +138,6 @@ class Login(GetData):
         if search('error-msg-list', page):
             print('Login failed.')
             raise SystemExit(1)
-        else:
-            print('Login success.')
-        print('Store cookies...')
         cookie.save(ignore_discard=True, ignore_expires=True)
 
 
@@ -157,10 +150,8 @@ class LoadPage(Login):
         page = self.get_page_data(url, post_value)
         if page.find('ui-button _login') != -1:
             print('This cookies has been invalid.')
-            print('Delete the old cookies.')
             remove(self.cookiesFile)
             if hasattr(self, 'pixiv_id'):
-                print('Automatic re ', end='')
                 self.login(self.pixiv_id, self.password)
                 page = self.get_page_data(url, post_value)
             else:
@@ -222,19 +213,18 @@ class GetUserPage(LoadPage):
                      }
         get_data = urlencode(get_value)
         work_url = self.memIllUrl + get_data
-        print('Load the first page of work directory...')
+        print("Load the page 1...")
         work_page = self.url_open(work_url)
         pattern = compile('class="count-badge">(.*?)</span>')
         count_num = search(pattern, work_page)
         count_num = int(count_num.group(1)[:-1])
         total_page = ceil(count_num / 20)
-        print('Total number of pages: %d' % total_page)
         yield work_page
         for i in range(2, total_page + 1):
             get_value['p'] = i
             get_data = urlencode(get_value)
             work_url = self.memIllUrl + get_data
-            print('Load a new page of work directory...(%d / %d)' % (i, total_page))
+            print("Load the page %d..." % i)
             work_page = self.url_open(work_url)
             yield work_page
 
@@ -257,17 +247,32 @@ class SwitchPage(GetUserPage, GetRankPage):
                 self.existedName = ','.join(listdir(self.dirName))
                 yield work_page
         elif option == '1':
-            choose = input('Please choose daily/weekly/monthly/rookie/original/male/female/ugoira_daily/ugoira_weekly/'
-                           'daily_r18/weekly_r18/male_r18/female_r18/ugoira_daily_r18/ugoira_weekly_r18:\n'
-                           )
-            if choose not in ['daily', 'weekly', 'monthly', 'rookie', 'original', 'male', 'female',
-                              'ugoira_daily', 'ugoira_weekly',
-                              'daily_r18', 'weekly_r18', 'male_r18', 'female_r18',
-                              'ugoira_daily_r18', 'ugoira_weekly_r18'
-                              ]:
+            rank = ['daily', 'weekly', 'monthly', 'rookie', 'original', 'male', 'female',
+                    'ugoira_daily', 'ugoira_weekly',
+                    'daily_r18', 'weekly_r18', 'male_r18', 'female_r18',
+                    'ugoira_daily_r18', 'ugoira_weekly_r18'
+                    ]
+            print('Please choose a rank:')
+            print('0.daily')
+            print('1.weekly')
+            print('2.monthly')
+            print('3.rookie')
+            print('4.original')
+            print('5.male')
+            print('6.female')
+            print('7.ugoira_daily')
+            print('8.ugoira_weekly')
+            print('9.daily_r18')
+            print('10.weekly_r18')
+            print('11.male_r18')
+            print('12.female_r18')
+            print('13.ugoira_daily_r18')
+            print('14.ugoira_weekly_r18')
+            choose = input('Input 0~14: ')
+            if not choose.isdigit() or not rank[int(choose)]:
                 print('Wrong input.')
                 raise SystemExit(1)
-            for work_page in self.get_rank_work_page(choose):
+            for work_page in self.get_rank_work_page(rank[int(choose)]):
                 self.dirName = self.rankDirName
                 self.existedName = ','.join(listdir(self.dirName))
                 yield work_page
@@ -279,30 +284,13 @@ class SwitchPage(GetUserPage, GetRankPage):
 class StoreImg(SwitchPage):
     def __init__(self):
         super().__init__()
-        self.enable_dy_img = False
         self.img_id = ''
         self.img_class = ''
-
-    def init(self):
-        self.check_cookies()
-        select = input('Enable to get dynamic images? (y / n)\n')
-        if select.lower() == 'y':
-            try:
-                __import__('PIL')
-            except ImportError:
-                print('Please install pillow module first.')
-                print('`pip install pillow`')
-                raise SystemExit(1)
-            self.enable_dy_img = True
-        else:
-            print('Wrong input.')
-            raise SystemExit(1)
 
     def get_img_page_url(self):
         pattern = compile('image-item.*?href=".*?id=(\d*).*?"\s*class="work\s*_work\s*(.*?)\s*"')
         for work_page in self.switch_work_page():
             for result in finditer(pattern, work_page):
-                print('Get image id...')
                 self.img_id = result.group(1)
                 self.img_class = result.group(2)
                 get_value = {'mode': 'medium',
@@ -312,19 +300,13 @@ class StoreImg(SwitchPage):
                 img_page_url = self.memIllUrl + get_data
                 if self.img_class.find('multiple') == -1:
                     if self.existedName.find(self.img_id + '_ugoira1920x1080') != -1:
-                        print('Exist zip file.', end='')
                         zip_name = self.img_id + '_ugoira1920x1080.zip'
                         zip_name = join(self.dirName, zip_name)
                         self.get_gif_img(zip_name)
-                        print()
                         continue
                     elif self.existedName.find(self.img_id) != -1:
                         print('Image has been saved.')
                         continue
-                    else:
-                        print('Load image page...')
-                else:
-                    print('Get multiple images...')
                 yield img_page_url
 
     def get_img_page(self):
@@ -339,7 +321,6 @@ class StoreImg(SwitchPage):
         for img_page in self.get_img_page():
             ori_img_url = search(pattern, img_page)
             if ori_img_url:
-                print('Get the original image url...')
                 yield ori_img_url.group(1)
             else:
                 meta2 = search(pattern_meta2, img_page).group(1)
@@ -347,12 +328,8 @@ class StoreImg(SwitchPage):
                     img_num = meta2.split()[-1][:-1]
                     yield from self.get_mul_img_url(self.img_id, img_num)
                 elif img_page.find('ugoira') != -1:
-                    if self.enable_dy_img:
-                        print('Get the original dynamic image url...')
-                        dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
-                        yield dyn_ori_img_url
-                    else:
-                        print('Can not get dynamic image.')
+                    dyn_ori_img_url = search('Full.*?"src":"(.*?)"', img_page).group(1).replace('\\', '')
+                    yield dyn_ori_img_url
                 else:
                     yield from self.get_ori_img_url(self.img_id)
 
@@ -371,28 +348,25 @@ class StoreImg(SwitchPage):
         get_value = {'mode': 'manga_big',
                      'illust_id': img_id,
                      }
-        print('Total number of image: %s' % img_num)
         for i in range(int(img_num)):
             if self.existedName.find('%s_p%d' % (img_id, i)) != -1:
-                print('Image has been saved. (%d / %s)' % (i + 1, img_num))
+                print('Image has been saved.')
                 continue
             get_value['page'] = i
             get_data = urlencode(get_value)
             ori_img_page_url = self.memIllUrl + get_data
-            print('Load the original image page...')
             ori_img_page = self.url_open(ori_img_page_url)
             self.headers['Referer'] = ori_img_page_url
-            print('Get the original image url...(%d / %s)' % (i + 1, img_num))
             ori_img_url = search('src="(.*?)"', ori_img_page).group(1)
             yield ori_img_url
 
     def get_gif_img(self, zip_name):
         tmp_files = []
         gif_name = zip_name.split('_ugoira')[0] + '.gif'
-        tmp_dir = join(self.dirName, 'tmp', gif_name.split('\\')[-1])
+        path, name = split(gif_name)
+        tmp_dir = join(self.dirName, 'tmp', name)
         if not exists(tmp_dir):
             makedirs(tmp_dir)
-        print('\nUnzip the file...')
         zip_file = ZipFile(zip_name)
         for file_name in zip_file.namelist():
             tmp_file_name = join(tmp_dir, file_name)
@@ -401,12 +375,11 @@ class StoreImg(SwitchPage):
                 f.write(zip_data)
             tmp_files.append(tmp_file_name)
         zip_file.close()
-        print('Store %s...' % gif_name)
         from PIL import Image
         images = [Image.open(img_name) for img_name in tmp_files]
         writeGif(gif_name, images, subRectangles=False)
         del images
-        print('Store %s success.' % gif_name, end=' ')
+        print('%s is saved in %s.' % (name, path), end=' ')
         remove(zip_name)
         rmtree(tmp_dir)
 
@@ -428,10 +401,10 @@ def th(si, img_url):
 
 def start():
     si = StoreImg()
-    proxy = input("Use proxy(sock5, port=1080)?[Y/n]: ")
-    if proxy.lower() == "y":
+    proxy = input('Use proxy(sock5, port=1080)? [Y/N]: ')
+    if proxy.lower() == 'y':
         si.use_proxy = True
-    si.init()
+    si.check_cookies()
     max_thread = 10
     thread = []
     for img_url in si.get_img_url():

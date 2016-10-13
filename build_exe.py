@@ -8,7 +8,7 @@ if sys.maxsize > (2 ** 31 - 1):
 opts = ['start.py',
         '-F','-y',
         '--clean',
-        '--specpath=./spec',
+        '--specpath=spec',
         '--name=pixdog-' + bit,
         '--icon=pixdog.ico'
         ]
