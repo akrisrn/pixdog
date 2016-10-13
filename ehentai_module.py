@@ -24,7 +24,7 @@ def url_open(url, use_proxy, t=60):
                 return urlopen(url, timeout=t).read()
         except URLError as e:
             print(e.reason)
-            raise SystemExit(1)
+            return ""
         except (timeout, IncompleteRead, RemoteDisconnected):
             print('Reload...')
 

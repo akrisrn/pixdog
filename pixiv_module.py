@@ -37,7 +37,7 @@ class GetData(object):
                 return response, data
             except URLError as e:
                 print(e.reason)
-                raise SystemExit(1)
+                return "", ""
             except (timeout, IncompleteRead, RemoteDisconnected):
                 print('Reload...')
 
@@ -188,6 +188,8 @@ class GetRankPage(LoadPage):
             work_url = self.rankUrl + get_data
             print('Load the page ranked %d to %d ...' % (50 * (i - 1) + 1, 50 * i))
             work_page = self.url_open(work_url)
+            if not work_page:
+                break
             yield work_page
 
 
@@ -269,7 +271,7 @@ class SwitchPage(GetUserPage, GetRankPage):
             print('13.ugoira_daily_r18')
             print('14.ugoira_weekly_r18')
             choose = input('Input 0~14: ')
-            if not choose.isdigit() or not rank[int(choose)]:
+            if not choose.isdigit() or not (int(choose) in range(len(rank))):
                 print('Wrong input.')
                 raise SystemExit(1)
             for work_page in self.get_rank_work_page(rank[int(choose)]):
