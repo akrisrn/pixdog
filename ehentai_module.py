@@ -25,7 +25,7 @@ def url_open(url, use_proxy, t=60):
         except URLError as e:
             print(e.reason)
             return ""
-        except (timeout, IncompleteRead, RemoteDisconnected):
+        except (timeout, IncompleteRead, RemoteDisconnected, ConnectionResetError):
             print('Reload...')
 
 
@@ -46,7 +46,10 @@ count = 1
 
 def th(img_mark, path, img_count, img_page_url, use_proxy):
     global count
-    page_data = url_open(img_page_url + img_mark, use_proxy).decode('utf-8')
+    page_data = url_open(img_page_url + img_mark, use_proxy)
+    if not page_data:
+        return ""
+    page_data = page_data.decode('utf-8')
     pattern = compile('<img id="img" src="(.*?)"')
     img_url = search(pattern, page_data).group(1)
     img_name = str(img_url.split('/')[-1])
