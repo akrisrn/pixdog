@@ -30,7 +30,7 @@ def url_open(url, use_proxy, t=60):
 
 
 def get_img_mark(page_data, page_num, manga_page_url, use_proxy):
-    pattern = compile('<a href="http://g\.e-hentai\.org/s/(.*?)">')
+    pattern = compile('<a href="https://e-hentai\.org/s/(.*?)">')
     for img_mark in findall(pattern, page_data):
         yield img_mark
 
@@ -83,8 +83,8 @@ def start():
         print("Error code.")
         raise SystemExit(1)
 
-    manga_page_url = "http://g.e-hentai.org/g/" + manga_mark
-    img_page_url = "http://g.e-hentai.org/s/"
+    manga_page_url = "https://e-hentai.org/g/" + manga_mark
+    img_page_url = "https://e-hentai.org/s/"
 
     print("Load the page 1...")
     page_data = url_open(manga_page_url, use_proxy).decode('utf-8')
