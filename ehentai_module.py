@@ -7,13 +7,15 @@ from socket import timeout
 from threading import Thread
 from time import sleep
 from urllib.error import URLError
-from urllib.request import build_opener, urlopen
+from urllib.request import build_opener, urlopen, Request
 
 from socks import SOCKS5
 from sockshandler import SocksiPyHandler
 
-opener = build_opener(SocksiPyHandler(SOCKS5, "127.0.0.1", 1080))
+user_agent = ('User-Agent', 'Mozilla/5.0 (Windows NT 5.1; rv:5.0) Gecko/20100101 Firefox/5.0')
 
+opener = build_opener(SocksiPyHandler(SOCKS5, "127.0.0.1", 1080))
+opener.addheaders = [user_agent]
 
 def url_open(url, use_proxy, t=60):
     while True:
@@ -21,7 +23,9 @@ def url_open(url, use_proxy, t=60):
             if use_proxy:
                 return opener.open(url, timeout=t).read()
             else:
-                return urlopen(url, timeout=t).read()
+                request = Request(url)
+                request.add_header(user_agent[0], user_agent[1])
+                return urlopen(request, timeout=t).read()
         except URLError as e:
             print(e.reason)
             return ""
